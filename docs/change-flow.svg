@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1142 500" width="1142" height="500" role="img" aria-label="How the kit builds and updates a shortcut: you describe a new shortcut or a change in plain words. 0 Claude Code writes the spec with the shortcut-spec skill: it asks who will use it, what for and why, recommends how to build it and flags what the platform can't do, saved as specs/PRD.md. You approve the spec; nothing is built until you do. Then Claude Code, on its own: 1 builds or edits the shortcut with the shortcut-dev skill, copying each action's settings from a real example (shortcut_action_index.py, examples/action-library, shortcut_io.py); 2 tests it, run by shortcut_build.py: wiring audit (audit_wiring.py), spec coverage (ac_coverage.py, with test cases from the shortcut-qa skill), regression script, and real-sample check (shortcut_action_index.py); 3 saves the signed file only when every test passes and opens the import dialog. A failed test saves nothing; it fixes and retests. You click Add and use it on your iPhone; the next change starts again. Before the first build, doctor.py checks your Mac and sets up your tests.">
+<style>
+:root{--bg:#FFFFFF;--ink:#16150F;--sub:#5A5547;--line:#8A8576;--step:#F7F6F2;--stepline:#D6D3C9;--teal:#0B6E57;--tealbg:#E6F1EC;--amber:#8A5A00;--amberbg:#FBF3E4;--red:#A3352B;--code:#0B4F7A;}
+@media (prefers-color-scheme:dark){:root{--bg:#0D1117;--ink:#EFEDE6;--sub:#C9C4B6;--line:#8C877A;--step:#1D1B15;--stepline:#3B382E;--teal:#3FB592;--tealbg:#13291F;--amber:#E0A93B;--amberbg:#2A2112;--red:#E07A6E;--code:#7CC4F0;}}
+svg{font-family:ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;}
+.bg{fill:var(--bg)}
+.band{fill:var(--tealbg);stroke:var(--teal);stroke-width:2}
+.box{fill:var(--bg);stroke:var(--teal);stroke-width:1.2}
+.you{fill:var(--amberbg);stroke:var(--amber);stroke-width:1.6}
+.t{fill:var(--ink);font-size:17px;font-weight:600}
+.s{fill:var(--sub);font-size:13px}
+.kt{fill:var(--teal);font-size:13px;font-weight:700;letter-spacing:.08em}
+.ka{fill:var(--amber);font-size:12px;font-weight:700;letter-spacing:.08em}
+.num{fill:var(--teal);font-size:12px;font-weight:700}
+.tl{fill:var(--sub);font-size:11.5px;font-weight:700;letter-spacing:.1em}
+.rule{stroke:var(--stepline);stroke-width:1}
+.pill{fill:var(--step);stroke:var(--stepline)}
+.p{fill:var(--ink);font-size:12.5px}
+.c{fill:var(--code);font-size:11px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.edge{fill:none;stroke:var(--line);stroke-width:2;stroke-linecap:round;stroke-dasharray:8 6;animation:flow 1.6s linear infinite}
+.edge.in{stroke:var(--teal)}
+.edge.fail{stroke:var(--red)}
+.arrow{fill:var(--line)} .arrow.in{fill:var(--teal)} .arrow.fail{fill:var(--red)}
+.lab{fill:var(--sub);font-size:13px}
+.lab.fail{fill:var(--red)}
+@keyframes flow{to{stroke-dashoffset:-28}}
+@media (prefers-reduced-motion:reduce){.edge{animation:none}}
+</style>
+<rect class="bg" width="1142" height="500"/>
+<path class="edge" d="M1062 112 V52 Q1062 40 1050 40 H94 Q82 40 82 52 V104"/><path class="arrow" d="M82 112 l-6 -10 h12z"/>
+<text class="lab" x="572" y="30" text-anchor="middle">next change</text>
+<rect class="you" x="16" y="112" width="132" height="308" rx="14"/>
+<text class="ka" x="30" y="140">YOU</text>
+<text class="t" x="30" y="178">Describe a</text>
+<text class="t" x="30" y="200">new shortcut,</text>
+<text class="t" x="30" y="222">or a change</text>
+<text class="s" x="30" y="246">in plain words</text>
+<line class="rule" x1="30" y1="342" x2="134" y2="342"/>
+<text class="tl" x="30" y="360">FIRST TIME</text>
+<text class="c" x="30" y="378">doctor.py</text>
+<text class="s" x="30" y="396">sets up your tests</text>
+<path class="edge" d="M148 188 H168"/><path class="arrow" d="M176 188 l-10 -6 v12z"/>
+<rect class="box" x="176" y="112" width="160" height="152" rx="12"/>
+<text class="num" x="190" y="138">0</text>
+<text class="tl" x="322" y="138" text-anchor="end" style="fill:var(--teal)">CLAUDE CODE</text>
+<text class="t" x="190" y="164">Writes</text>
+<text class="t" x="190" y="186">the spec</text>
+<text class="s" x="190" y="206">asks who, what, why;</text>
+<text class="s" x="190" y="221">recommends the how;</text>
+<text class="s" x="190" y="236">flags platform limits</text>
+<text class="c" x="190" y="254">shortcut-spec skill</text>
+<path class="edge" d="M256 264 V284"/><path class="arrow" d="M256 292 l-6 -10 h12z"/>
+<rect class="you" x="176" y="292" width="160" height="128" rx="14"/>
+<text class="ka" x="190" y="316">YOU</text>
+<text class="t" x="190" y="344">Approve</text>
+<text class="t" x="190" y="366">specs/PRD.md</text>
+<text class="s" x="190" y="390">nothing is built</text>
+<text class="s" x="190" y="406">until you do</text>
+<rect class="band" x="364" y="70" width="606" height="412" rx="18"/>
+<text class="kt" x="384" y="98">CLAUDE CODE DOES ALL OF THIS ON ITS OWN</text>
+<path class="edge" d="M336 356 H372"/><path class="arrow" d="M380 356 l-10 -6 v12z"/>
+<path class="edge in" d="M566 266 H586"/><path class="arrow in" d="M594 266 l-10 -6 v12z"/>
+<path class="edge in" d="M786 266 H806"/><path class="arrow in" d="M814 266 l-10 -6 v12z"/>
+<path class="edge" d="M954 266 H990"/><path class="arrow" d="M998 266 l-10 -6 v12z"/>
+<rect class="box" x="380" y="112" width="186" height="308" rx="12"/>
+<text class="num" x="394" y="138">1</text>
+<text class="t" x="394" y="164">Builds or edits</text>
+<text class="t" x="394" y="186">the shortcut</text>
+<text class="s" x="394" y="208">writes the steps; copies</text>
+<text class="s" x="394" y="224">each action's settings</text>
+<text class="s" x="394" y="240">from a real example,</text>
+<text class="s" x="394" y="256">never guessed</text>
+<line class="rule" x1="394" y1="282" x2="552" y2="282"/>
+<text class="tl" x="394" y="300">TOOLS</text>
+<text class="c" x="394" y="322">shortcut-dev skill</text>
+<text class="c" x="394" y="342">shortcut_action_index.py</text>
+<text class="c" x="394" y="362">examples/action-library/</text>
+<text class="c" x="394" y="382">shortcut_io.py</text>
+<rect class="box" x="594" y="112" width="192" height="308" rx="12"/>
+<text class="num" x="608" y="138">2</text>
+<text class="t" x="608" y="164">Tests it</text>
+<text class="s" x="608" y="184">run by <tspan class="c">shortcut_build.py</tspan></text>
+<rect class="pill" x="601" y="196" width="179" height="40" rx="10"/><text class="p" x="612" y="212">wiring audit</text><text class="c" x="612" y="228">audit_wiring.py</text>
+<rect class="pill" x="601" y="240" width="179" height="40" rx="10"/><text class="p" x="612" y="256">spec coverage</text><text class="c" x="612" y="272">ac_coverage.py</text>
+<rect class="pill" x="601" y="284" width="179" height="40" rx="10"/><text class="p" x="612" y="300">regression</text><text class="c" x="612" y="316">your *regression*.py</text>
+<rect class="pill" x="601" y="328" width="179" height="40" rx="10"/><text class="p" x="612" y="344">real-sample check</text><text class="c" x="612" y="360">shortcut_action_index.py</text>
+<line class="rule" x1="608" y1="376" x2="772" y2="376"/>
+<text class="s" x="608" y="392" style="font-size:12px">cases from the spec:</text>
+<text class="c" x="608" y="408">shortcut-qa skill</text>
+<rect class="box" x="814" y="112" width="140" height="308" rx="12"/>
+<text class="num" x="828" y="138">3</text>
+<text class="t" x="828" y="164">Saves the</text>
+<text class="t" x="828" y="186">signed file</text>
+<text class="s" x="828" y="208">only when every</text>
+<text class="s" x="828" y="224">test passes, then</text>
+<text class="s" x="828" y="240">opens the import</text>
+<text class="s" x="828" y="256">dialog</text>
+<line class="rule" x1="828" y1="282" x2="940" y2="282"/>
+<text class="tl" x="828" y="300">TOOLS</text>
+<text class="c" x="828" y="322">shortcut_build.py</text>
+<text class="s" x="828" y="340">signs with macOS</text>
+<text class="c" x="828" y="356">shortcuts sign</text>
+<text class="s" x="952" y="472" text-anchor="end">.py files are in scripts/</text>
+<path class="edge fail" d="M690 420 C690 462 473 462 473 428"/><path class="arrow fail" d="M473 422 l-6 10 h12z"/>
+<text class="lab fail" x="581" y="472" text-anchor="middle">a test fails → nothing is saved; it fixes and retests</text>
+<rect class="you" x="998" y="112" width="128" height="308" rx="14"/>
+<text class="ka" x="1012" y="140">YOU</text>
+<text class="t" x="1012" y="178">Use it on</text>
+<text class="t" x="1012" y="200">your iPhone</text>
+<text class="s" x="1012" y="226">one click on</text>
+<text class="s" x="1012" y="244">Add imports it;</text>
+<text class="s" x="1012" y="262">iCloud syncs it</text>
+</svg>

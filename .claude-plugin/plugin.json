@@ -1,0 +1,11 @@
+{
+  "name": "apple-shortcut-kit",
+  "version": "0.1.0",
+  "description": "A Claude Code plugin that builds, tests and maintains your Apple Shortcuts. Describe a shortcut or a change; Claude Code writes the .shortcut file and saves it only if every test passes.",
+  "author": {
+    "name": "lijingwu2026"
+  },
+  "repository": "https://github.com/lijingwu2026/claude-code-apple-shortcut-kit",
+  "license": "MIT",
+  "keywords": ["apple-shortcuts", "shortcuts", "macos", "plist", "qa", "acceptance-criteria"]
+}

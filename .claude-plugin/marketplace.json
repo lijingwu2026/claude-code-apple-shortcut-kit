@@ -1,0 +1,14 @@
+{
+  "name": "apple-shortcut-kit",
+  "description": "A Claude Code plugin that builds, tests and maintains your Apple Shortcuts. Describe a shortcut or a change; Claude Code writes the .shortcut file and saves it only if every test passes.",
+  "owner": {
+    "name": "lijingwu2026"
+  },
+  "plugins": [
+    {
+      "name": "apple-shortcut-kit",
+      "source": "./",
+      "description": "Read, edit and sign .shortcut files; audit the wiring; gate every build with your QA before import."
+    }
+  ]
+}
