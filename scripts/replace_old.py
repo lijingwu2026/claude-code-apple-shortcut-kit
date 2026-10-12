@@ -32,6 +32,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import types
 import urllib.parse
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
@@ -248,10 +249,15 @@ def selftest() -> int:
               and f'old {old} deleted' in out, out)
 
         print('=== c name present, キャンセル ===')
-        t0 = time.monotonic()
-        rc, out, opened, left = case(['Home', NAME, old], 'cancel', cli)
-        check('GateError within 5 s, import NOT opened, message names キャンセル and the retry',
-              time.monotonic() - t0 < 5 and rc == 1 and opened == [url] and old in left and 'キャンセル' in out
+        slept, real_time = [], ro.time   # count poll sleeps instead of timing the whole build, which load can slow
+        ro.time = types.SimpleNamespace(monotonic=real_time.monotonic,
+                                        sleep=lambda s: (slept.append(s), real_time.sleep(s)))
+        try:
+            rc, out, opened, left = case(['Home', NAME, old], 'cancel', cli)
+        finally:
+            ro.time = real_time
+        check('GateError without a poll wait, import NOT opened, message names キャンセル and the retry',
+              not slept and rc == 1 and opened == [url] and old in left and 'キャンセル' in out
               and 'Press 削除 to replace the old copy, then re-run' in out and 'replace_old.py' in out, out)
 
         print('=== d name present, helper not added yet ===')
