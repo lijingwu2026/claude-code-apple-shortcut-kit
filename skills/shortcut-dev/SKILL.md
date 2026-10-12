@@ -62,10 +62,14 @@ python3 "${CLAUDE_PLUGIN_ROOT}/scripts/shortcut_action_index.py" --param "<actio
 
 → Fill: samples in this generation = ______
 Read the probe-verified defaults table in protocol §7.3: a setting whose default is listed there can be left out to get that default; any other value still needs a sample.
-On 0, never copy an unverified value into the product; offer the user both routes below with your recommendation:
+On 0, never copy an unverified value into the product. First run `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/shortcut_action_index.py" --toolkit "<action>"` (Apple's catalog of legal keys and values, not a sample):
+- an enum setting → take route (a)'s best guess from the listed values; a value outside them needs route (b);
+- a text, number or bool setting → the catalog confirms only that the key exists;
+- a key the catalog doesn't list → it decides nothing; use `--dump` and the two routes.
+Then offer the user both routes below with your recommendation:
 - **(a) build-and-verify** — when the action runs on a Mac and its effect can be read back (a note's text, a file, returned text): build a `probe-*` shortcut with your best-guess value, read protocol §7.6 and deliver the probe as it says, run it with `shortcuts run "<name>" --output-path <file>`, and check the actual effect, not exit 0 (a wrong value usually falls back to a default silently). Use the value in the product only after the effect matches, and keep the probe `.shortcut` in the project directory (not `archive/` or a scratch dir) so it becomes a corpus sample. A probe whose effect you checked counts as a sample even within 24 h of writing it: the "saved in the last 24h = no corpus" rule exists for files nobody has run. After the probe's effect is checked, run `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/probe_cleanup.py"`: it deletes the installed `probe-` shortcuts from the Shortcuts app (one Delete click, 「削除」 on a Japanese system; the `.shortcut` file stays as the sample).
 - **(b) export** — read protocol §7.3, then use the action once in the Shortcuts app and export it as it says. Required when the action cannot run on a Mac (Health writes, camera, iPhone-only) or its effect cannot be read back.
-For an action that has never been used: first `--list <keyword>` to find the identifier, then `--dump <action>` to see the full parameters of one real sample, and only then the command above.
+For an action that has never been used: first `--list <keyword>` to find the identifier, then `--toolkit <action>` for its legal keys and values, then `--dump <action>` to see the full parameters of one real sample, and only then the command above.
 
 **② Structure (Required)** — what the target file looks like now and where this step is inserted
 
@@ -119,7 +123,7 @@ If the user asks how to import, or cannot find the dialog, re-run `open -a Short
 | Question in hand | Platform layer (which part of the protocol) | Product layer, the physical thing (the protocol will not tell you where it is) |
 |---|---|---|
 | Has someone already hit this pitfall | §2.1 platform hard constraints | the product's own pitfall log, if it keeps one (for example `specs/problem-log.md`) |
-| How is this action usually wired, could its name be misspelled | §3 appendix on commonly mistaken action names · §7.8 key schema cheat sheet · §6a the manual answers the concept level only | the corpus's catalog layer (tools: see §2, `--help` first) |
+| How is this action usually wired, could its name be misspelled | §3 appendix on commonly mistaken action names · §7.8 key schema cheat sheet · §6a the manual answers the concept level only | the corpus's catalog layer, and Apple's catalog of legal keys and values (`--toolkit`) (tools: see §2, `--help` first) |
 | What should this change verify, and how do I know it is verified | §4 testing / verification playbook (C0-C7 in §4.2 · end-to-end dogfood in §4.4) · §7.9 headless QA loop | that product's `specs/ac-matrix.md` + the regression script in `scripts/` |
 | Does shipping a package count as delivered | **No** — §7.9 ①, the "install into the library" cell · the red note on the "`shortcuts` CLI has no import" item in §7.6 | §2 ⑤ of this file |
 

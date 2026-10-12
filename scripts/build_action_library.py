@@ -47,8 +47,7 @@ BUNDLED = (ROOT / 'automation' / 'shortcut-kit' / 'examples' if IN_SOURCE else R
 OWN = ('project', 'iCloud', 'Shortcuts')              # the corpus sources the bundled library is built from
 SKIP_SOURCE = 'macstories.net'                        # its terms forbid derived works
 APPLE_PREFIXES = ('is.workflow.actions.', 'com.apple.')
-CATALOG = (ROOT / 'knowledge' / 'learning' / 'ai' / 'upstream-docs' / '2026-09'
-           / 'shortcuts-toolkit-catalog-viticci')     # --audit only, never copied; absent in the plugin
+CATALOG = sai.toolkit_dir()                           # --audit's enum check: data/toolkit/ (plugin), else the source checkout's copy; None if neither
 FFFC = '￼'
 
 # Numbers that are an amount the author chose (seconds to wait, times to repeat), not a mode or code → 1.
@@ -334,13 +333,11 @@ def short(ident):
     return sai.short(ident)
 
 
-def catalog_enums(catalog: pathlib.Path):
-    """-> {(tool id, parameter key): {enum case ids and titles}} from the Viticci catalog (empty if absent)."""
-    try:
-        tools = json.loads((catalog / 'toolkit-v78-first-party-parameter-keys.json').read_text())['tools']
-        types = json.loads((catalog / 'toolkit-v78-first-party-enum-cases.json').read_text())['types']
-    except FileNotFoundError:
+def catalog_enums(catalog: pathlib.Path | None):
+    """-> {(tool id, parameter key): {enum case ids and titles}} from the Viticci catalog (empty if there is none)."""
+    if catalog is None:
         return {}
+    tools, types = sai.toolkit_load(catalog)
     out = {}
     for tid, tool in tools.items():
         for prm in tool.get('parameters', []):
@@ -415,7 +412,7 @@ def audit(root: pathlib.Path) -> int:
     print(f'numbers: {len(numbers)} distinct')
     print('  ' + ' '.join(map(repr, sorted(numbers))))
     print(f'allowlisted values with no catalog enum to check (review by eye): {len(review)}'
-          + ('' if enums else ' — enum check skipped: the Viticci catalog is not in this checkout'))
+          + ('' if enums else ' — enum check skipped: no ToolKit catalog in ' + ' or '.join(map(str, sai.TOOLKIT_DIRS))))
     for (k, v), idents in sorted(review.items()):
         print(f'  {k} = {v!r}  ← {", ".join(sorted(idents)[:3])}{" …" if len(idents) > 3 else ""}')
     print(f'audit failures: {len(fails)}')

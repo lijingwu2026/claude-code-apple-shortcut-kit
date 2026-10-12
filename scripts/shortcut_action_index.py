@@ -39,11 +39,13 @@ shows names but not contents -> to get one into the corpus, export it to a file 
     python3 shortcut_action_index.py --check dictionary exit addnewevent   # answers yes/no only; exit code = number missing
     python3 shortcut_action_index.py --param 'conditional:WFCondition=4'  # samples with that parameter value, grouped by client version
     python3 shortcut_action_index.py --param 'conditional:WFCondition=4' --for MyShortcut.shortcut  # exit non-zero when the target's generation has 0 samples
+    python3 shortcut_action_index.py --toolkit appendnote  # Apple's ToolKit catalog: an action's setting keys and legal values (not proof a value works)
     python3 shortcut_action_index.py --selftest            # self-check the --param logic with synthetic fixtures
     python3 shortcut_action_index.py --list 菜单 --lang ja,zh_CN  # catalog layer: which actions exist (two columns, not joined; see the output notes)
 """
 import argparse
 import collections
+import json
 import os
 import pathlib
 import plistlib
@@ -63,6 +65,13 @@ GALLERY = pathlib.Path('/System/Library/PrivateFrameworks/WorkflowKit.framework'
 LOCTABLE = pathlib.Path('/System/Library/PrivateFrameworks/WorkflowKit.framework'
                         '/Resources/Localizable.loctable')
 PREFIX = 'is.workflow.actions.'
+# Apple's ToolKit action catalog (--toolkit; build_action_library.py --audit), extracted by Viticci (MIT). Looked up in this order.
+TOOLKIT_FILES = ('toolkit-v78-first-party-parameter-keys.json', 'toolkit-v78-first-party-enum-cases.json')
+_ROOT = pathlib.Path(__file__).resolve().parent.parent          # the plugin root; in a source checkout, the automation folder
+TOOLKIT_DIRS = [_ROOT / 'data' / 'toolkit']                      # the plugin's bundled copy
+if _ROOT.name == 'automation':                                   # source checkout: the vendored copy
+    TOOLKIT_DIRS.append(_ROOT.parent.joinpath('knowledge', 'learning', 'ai', 'upstream-docs', '2026-09',
+                                              'shortcuts-toolkit-catalog-viticci'))
 
 
 def _in_hidden_dir(p: pathlib.Path, root: pathlib.Path = PROJECT) -> bool:
@@ -385,11 +394,106 @@ def _fmt_version_groups(groups: dict) -> str:
     return f'{total} sample(s) — ' + ' / '.join(parts)
 
 
-# ③ Discipline layer -- for an action you have not used, run all three; for a used action with a new parameter value, run at least --param.
+# ── ToolKit catalog: --toolkit ──────────────────────────────────────────────────────────────────
+#
+# Apple's own list of each first-party action's setting keys and their legal values (a macOS 27 / iOS 27 snapshot of the ToolKit
+# database, extracted by Viticci, MIT). It says which key exists and which value is legal -- never that a value works; that stays
+# with the real samples (`--param … --for`). Known holes: control flow (If / Menu / Repeat) has no entry, and some entries miss
+# keys that real files use.
+
+# Identifiers whose real samples use keys their catalog entry does not list. Measured 2026-10-12 over corpus() minus `local`
+# (project, iCloud, Gallery: 83 files, 72 catalog-covered identifiers), ignoring the plist container keys UUID, WFControlFlowMode,
+# GroupingIdentifier, CustomOutputName, WFInput and AppIntentDescriptor. A missing key is either a catalog hole or a retired old key.
+TOOLKIT_KEY_GAPS = frozenset('''
+com.apple.mobilenotes.SharingExtension is.workflow.actions.addnewreminder is.workflow.actions.appendnote
+is.workflow.actions.askllm is.workflow.actions.documentpicker.open is.workflow.actions.downloadurl
+is.workflow.actions.list is.workflow.actions.runworkflow
+'''.split())
+TOOLKIT_HEADER = ('Apple ToolKit catalog, macOS 27 / iOS 27 snapshot, extracted by Viticci (MIT): '
+                  'legal keys and values, not proof that a value works.')
+TOOLKIT_SHOWN = 40          # most enum cases / candidate actions printed at once
+
+
+def toolkit_dir() -> pathlib.Path | None:
+    """The first of TOOLKIT_DIRS that holds both catalog files, else None."""
+    return next((d for d in TOOLKIT_DIRS if all((d / f).is_file() for f in TOOLKIT_FILES)), None)
+
+
+def toolkit_load(d: pathlib.Path) -> tuple[dict, dict]:
+    """-> ({tool id: entry}, {enum type name: entry}) from the catalog folder d."""
+    keys, enums = (json.loads((d / f).read_text()) for f in TOOLKIT_FILES)
+    return keys['tools'], enums['types']
+
+
+def _toolkit_match(tools: dict, query: str) -> tuple[list, str]:
+    """-> (identifiers, how they matched). The first tier with a hit wins: the identifier itself (with or without the
+    `is.workflow.actions.` prefix -- the name `--list` shows) / its last segment / the display name / a substring of either.
+    Case-insensitive."""
+    q = query.strip().lower()
+    tiers = [('identifier', lambda t, n: t.lower() in (q, PREFIX + q)),
+             ('last identifier segment', lambda t, n: t.rsplit('.', 1)[-1].lower() == q),
+             ('display name', lambda t, n: n == q),
+             ('substring', lambda t, n: q in t.lower() or q in n)]
+    for how, hit in tiers:
+        found = sorted(t for t, v in tools.items() if hit(t, v['displayName'].lower()))
+        if found:
+            return found, how
+    return [], ''
+
+
+def _toolkit_cmd(query: str) -> int:
+    d = toolkit_dir()
+    if d is None:
+        print('❌ the Apple ToolKit catalog was not found; looked in:', file=sys.stderr)
+        for p in TOOLKIT_DIRS:
+            print(f'   {p}', file=sys.stderr)
+        return 1
+    tools, types = toolkit_load(d)
+    hits, how = _toolkit_match(tools, query)
+    if not hits:
+        print(f'❌ no action in the Apple ToolKit catalog matches「{query}」', file=sys.stderr)
+        print('   Control flow is never in it: If (`conditional`), Menu (`choosefrommenu`) and Repeat (`repeat.*`) have no entry '
+              '-- use `--dump` for those. Otherwise run `--list <keyword>` to confirm the name.', file=sys.stderr)
+        return 1
+    also = []
+    if len(hits) > 1 and how != 'substring':                 # several exact hits: take the one in Shortcuts' own namespace, and say so
+        own = [t for t in hits if t.startswith(PREFIX)]
+        if len(own) == 1:
+            hits, also = own, [t for t in hits if t not in own]
+    if len(hits) > 1:
+        print(f'❌ 「{query}」 matches {len(hits)} actions in the Apple ToolKit catalog ({how}); name one of them:', file=sys.stderr)
+        for t in hits[:TOOLKIT_SHOWN]:
+            print(f'   {t}  —  {tools[t]["displayName"]}', file=sys.stderr)
+        if len(hits) > TOOLKIT_SHOWN:
+            print(f'   … {len(hits) - TOOLKIT_SHOWN} more', file=sys.stderr)
+        return 1
+
+    tid = hits[0]
+    params = tools[tid].get('parameters', [])
+    print(TOOLKIT_HEADER)
+    print(f'{tid} — {tools[tid]["displayName"]}' + ('' if how == 'identifier' else f'   (matched on the {how})'))
+    if also:
+        print('Also matches (not shown): ' + '; '.join(f'{t} ({tools[t]["displayName"]})' for t in also))
+    why = (['lists 0 parameters'] if tools[tid].get('parameterCount', 0) == 0 else []) \
+        + (['is used in real samples with keys it does not list'] if tid in TOOLKIT_KEY_GAPS else [])
+    if why:
+        print(f'⚠️ This entry {" and ".join(why)}: a key missing here is not proof it is illegal; check `--dump`.')
+    for p in params:
+        names = list(dict.fromkeys(n for n in [p.get('typePythonName'), *(p.get('typePythonNames') or [])] if n))
+        print(f'  {p["key"]:24s} {p.get("name", "-"):26s} {" / ".join(names) or "-"}  [{", ".join(p.get("platforms", []))}]')
+        cases = list(dict.fromkeys((c['id'], c['title']) for n in names if n in types for c in types[n]['cases']))
+        for cid, title in cases[:TOOLKIT_SHOWN]:
+            print(f'      {cid}' + (f'  {title}' if title != cid else ''))
+        if len(cases) > TOOLKIT_SHOWN:
+            print(f'      … {len(cases) - TOOLKIT_SHOWN} more cases (type {", ".join(names)} in the enum-cases file)')
+    return 0
+
+
+# ③ Discipline layer -- for an action you have not used, run all four; for a used action with a new parameter value, run at least --param.
 # Written into the --help epilog and the bare-invocation output, and no longer into any rule / skill (see the shortcut-experience-
 # codify plan §A-1).
 DISCIPLINE = (
-    'For an action you have not used before, run all three: `--list` → `--dump` → `--param … --for`; '
+    'For an action you have not used before, run all four: `--list` → `--toolkit` → `--dump` → `--param … --for`; '
     'for an action you have used, with a parameter value you have not used before, run at least `--param` '
     '(the 09-05 failure was exactly this layer: `conditional` had been used, but `WFCondition=4` had zero samples in gen 5015).'
 )
@@ -606,6 +710,64 @@ def _selftest() -> int:
             _check('⑥ a local-library .wflow saved now is not marked fresh', loc.stem not in fresh, sorted(fresh))
         finally:
             PROJECT, PLUGIN_EXAMPLES, LOCAL_LIBRARY = orig_roots
+
+        # --- Case ⑦ ToolKit catalog (--toolkit): read from the catalog that ships with this script; TOOLKIT_DIRS swapped for the lookup order ---
+        import contextlib
+        import io
+
+        def _toolkit(q):
+            out, err = io.StringIO(), io.StringIO()
+            with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+                rc = _toolkit_cmd(q)
+            return rc, out.getvalue(), err.getvalue()
+
+        def _line(lines, pred):
+            return next((n for n, ln in enumerate(lines) if pred(ln)), -1)
+
+        warn = 'a key missing here is not proof it is illegal; check `--dump`'
+        rc, out, err = _toolkit('appendnote')
+        lines = out.splitlines()
+        op, ent = (_line(lines, lambda ln, k=k: ln.startswith(f'  {k} ')) for k in ('operation', 'entity'))
+        app, pre = (_line(lines, lambda ln, c=c: ln == f'      {c}  {c.title()}') for c in ('append', 'prepend'))
+        _check('⑦ --toolkit appendnote: `operation` lists append and prepend, ahead of the next parameter',
+               rc == 0 and 0 <= op < app < pre < ent, (rc, op, app, pre, ent))
+        rc, out, err = _toolkit('list')
+        _check('⑦ --toolkit list resolves to is.workflow.actions.list (not trello.add.list) and prints the gap warning',
+               rc == 0 and (out.splitlines() + ['', ''])[1].startswith('is.workflow.actions.list ') and warn in out,
+               (rc, out[:300]))
+        rc, out, err = _toolkit('setclipboard')
+        _check('⑦ an action with parameters and no known gap prints no gap warning (so the warning above is not unconditional)',
+               rc == 0 and warn not in out, (rc, warn in out))
+        rc, out, err = _toolkit('conditional')
+        _check('⑦ --toolkit conditional: not in the catalog, exit 1, the message names the control-flow gap',
+               rc == 1 and not out and 'choosefrommenu' in err, (rc, out, err))
+        rc, out, err = _toolkit('Append to Note')
+        _check('⑦ two display-name hits, one in is.workflow.actions: resolves to it and names the other hit',
+               rc == 0 and (out.splitlines() + ['', ''])[1].startswith('is.workflow.actions.appendnote ')
+               and 'Also matches (not shown): com.apple.Notes.NoteAppendTextIntent' in out, (rc, out[:300]))
+        rc, out, err = _toolkit('fetchcontactintent')
+        _check('⑦ two hits and none in is.workflow.actions: exit 1, both listed, nothing picked',
+               rc == 1 and not out and 'com.apple.AddressBook.FetchContactIntent' in err
+               and 'com.apple.MobileAddressBook.FetchContactIntent' in err, (rc, out, err))
+
+        real = toolkit_dir()
+        fake = scratch / 'fake_toolkit'
+        fake.mkdir()
+        (fake / TOOLKIT_FILES[0]).write_text(json.dumps({'tools': {PREFIX + 'appendnote': {
+            'displayName': 'Fake Append', 'parameterCount': 0, 'parameters': []}}}))
+        (fake / TOOLKIT_FILES[1]).write_text(json.dumps({'types': {}}))
+        saved = list(TOOLKIT_DIRS)
+        try:
+            TOOLKIT_DIRS[:] = [scratch / 'nope', fake, real]
+            _check('⑦ lookup order: a folder without the catalog is skipped, the first folder that has it wins',
+                   toolkit_dir() == fake, toolkit_dir())
+            _check('⑦ --toolkit reads that first folder', 'Fake Append' in _toolkit('appendnote')[1])
+            TOOLKIT_DIRS[:] = [scratch / 'nope_a', scratch / 'nope_b']
+            rc, out, err = _toolkit('appendnote')
+            _check('⑦ no catalog folder: exit 1, nothing on stdout, every folder looked in is printed',
+                   rc == 1 and not out and str(scratch / 'nope_a') in err and str(scratch / 'nope_b') in err, (rc, out, err))
+        finally:
+            TOOLKIT_DIRS[:] = saved
     finally:
         corpus = orig_corpus
         shutil.rmtree(scratch, ignore_errors=True)
@@ -630,6 +792,9 @@ def main() -> None:
                     help='how many real samples of an action have a given parameter value, grouped by WFWorkflowMinimumClientVersion')
     ap.add_argument('--for', dest='for_target', metavar='TARGET.shortcut',
                     help='with --param: read the target file\'s own client version; exit non-zero when that generation has 0 pre-existing samples')
+    ap.add_argument('--toolkit', metavar='ACTION',
+                    help="Apple's ToolKit catalog: an action's setting keys and their legal values (ACTION = identifier, its last "
+                         'segment or the display name). Not proof that a value works; control flow (If / Menu / Repeat) is not in it')
     ap.add_argument('--selftest', action='store_true',
                     help='self-check the --param logic with synthetic fixtures (does not touch the real corpus); exit 0 when all pass')
     ap.add_argument('--list', nargs='*', metavar='KEYWORD', default=None,
@@ -643,6 +808,9 @@ def main() -> None:
 
     if args.selftest:
         sys.exit(_selftest())
+
+    if args.toolkit is not None:
+        sys.exit(_toolkit_cmd(args.toolkit))
 
     index, files = build_index()
 

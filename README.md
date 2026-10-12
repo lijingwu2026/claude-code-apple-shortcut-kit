@@ -49,8 +49,9 @@ One line per file. What each one changes compared with Claude Code on its own is
 |---|---|---|
 | 0 Spec | `skills/shortcut-spec`, `templates/shortcut-prd-template.md` | Asks who, what and why, then writes `specs/PRD.md` as a draft for you to approve |
 | 1 Build | `skills/shortcut-dev` | Tells Claude Code how to read, edit and build a shortcut |
-| 1 Build | `scripts/shortcut_action_index.py` | Finds real examples of an action and its settings (`--check`, `--dump`, `--param`) |
+| 1 Build | `scripts/shortcut_action_index.py` | Finds real examples of an action and its settings (`--check`, `--dump`, `--param`), and the catalog's allowed values (`--toolkit`) |
 | 1 Build | `examples/action-library/` | One example per action type the author has used (73 types), personal values replaced, as `.wflow` |
+| 1 Build | `data/toolkit/` | Apple's action catalog: most first-party actions' settings and allowed values (macOS 27 snapshot) |
 | 1 Build | `scripts/build_action_library.py` | Optional: builds a larger local library from ShortcutsBench ([More examples](#more-examples-optional)) |
 | 1 Build | `scripts/probe_cleanup.py` | Deletes the `probe-` test shortcuts; its helper `kit-cleanup-probes` needs one **Add** click |
 | 1 Build | `scripts/shortcut_io.py` | Reads and writes `.shortcut` files (`--tree`, `--prompts`) |
@@ -72,7 +73,7 @@ The left column describes what Claude Code does on its own; it is not a measured
 | **Idea to spec to test cases** | Asked for a spec, it often answers in the reply instead of a file, in a shape the coverage check can't read. It asks nothing before writing, decides open points without asking, gives no verdict per requirement, and can promise a run the platform doesn't guarantee, such as an unattended 7:00 automation | `shortcut-spec` asks who, what for and why up front, recommends how to build it (including any service with a web API), marks each requirement works, iPhone only, needs a workaround or needs an app, and lists what to check on your iPhone first. It writes `specs/PRD.md` marked draft, with its recommendations and each open question with the default it used. Or use your own spec tool and save its output as `specs/PRD.md` (for builtin tests, with stories as `### US-n` and acceptance criteria as `**ACm …**` lines). `shortcut-qa` then turns the acceptance criteria into a case matrix. Before building from a spec marked draft, Claude Code shows it and asks you to approve it. This is an instruction to Claude Code, not a build check |
 | **Reading and editing a signed `.shortcut`** | The file is a signed archive. `shortcuts` can sign one but has no command that reads it back | `shortcut_io.py` unpacks it to its steps and repacks it, with no key needed |
 | **A new action** | Written from memory | The build refuses an action type new to the file that has no real example in your shortcuts, Apple's samples or the kit's examples (the real-sample check) |
-| **A setting value** | Written from memory. Shortcuts doesn't check settings and `shortcuts sign` signs anyway, so a wrong value shows up only when it runs | The skill has Claude Code look the value up in real examples first. With none, it stops and offers to test a guess on your Mac, or asks you to export a sample. This is an instruction to Claude Code, not a build check |
+| **A setting value** | Written from memory. Shortcuts doesn't check settings and `shortcuts sign` signs anyway, so a wrong value shows up only when it runs | The skill has Claude Code look the value up in real examples first. With none, it reads the allowed values from Apple's action catalog, then offers to test one on your Mac or asks you to export a sample. This is an instruction to Claude Code, not a build check |
 | **Wiring between steps** | Not checked. A step pointing at an output that isn't there, or a placeholder one position off after an emoji, still signs | The wiring audit (`audit_wiring.py`) runs before saving; a failure saves nothing |
 | **Tests on every build** | Whatever Claude Code thinks of | The QA you chose. **builtin**: every acceptance criterion in `specs/PRD.md` has a case in `specs/ac-matrix.md` (`ac_coverage.py`), and your `scripts/*regression*.py` pass; without `specs/PRD.md` the build stops and saves nothing, and until `specs/ac-matrix.md` exists the coverage check is skipped and the build says so. **own**: your test command passes. **none**: the wiring audit and real-sample check only, and every build says so. Nothing then checks your acceptance criteria or regression script, so a broken feature shows up only when it runs on your iPhone |
 | **First-time setup** | — | `doctor.py` checks the Mac and records which tests every build runs |
@@ -204,12 +205,17 @@ real example. Each must be refused with the target file untouched. From `python3
   When a build needs a value no example shows, such as which existing note "Append to Note" writes to, Claude Code
   stops and asks you to export a one-action sample from the Shortcuts app, or offers to test its guess on your Mac
   first.
+- **Apple's action catalog is a snapshot of macOS 27 / iOS 27**, extracted from Apple's ToolKit database by Viticci.
+  It lists legal values, not working usage. It has no If, Menu or Repeat, and some actions miss keys. Your Mac's own,
+  possibly newer, database isn't read, because macOS needs Full Disk Access for that.
 
 ## Credits
 
 The bundled examples come from the author's own shortcuts. The optional local library is built on your Mac from
 [ShortcutsBench](https://github.com/EachSheep/ShortcutsBench) (Apache-2.0); this repo contains none of its shortcuts.
+Action catalog extracted from Apple's ToolKit database by
+[viticci/shortcuts-playground-plugin](https://github.com/viticci/shortcuts-playground-plugin); the extract is MIT.
 
 ## License
 
-MIT
+MIT. `data/toolkit/` carries its own MIT license.
