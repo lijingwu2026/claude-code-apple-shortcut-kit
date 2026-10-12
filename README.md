@@ -22,7 +22,7 @@ Claude Code builds any Apple Shortcut for you, and keeps it working through ever
   shortcuts, or the examples bundled with the plugin. With no shortcuts of your own, it has examples for about 80
   action types, and about 480 with the [optional local library](#more-examples-optional).
 
-<!-- DEMO VIDEO: uploaded as a GitHub attachment when the repo is published; the URL goes on the next line. -->
+https://github.com/user-attachments/assets/7b0f2fc5-8acb-4b82-951f-79fe07427c21
 
 ## How the kit builds and updates a shortcut
 
