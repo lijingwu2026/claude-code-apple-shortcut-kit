@@ -11,7 +11,7 @@ the on-device matrix was derived from "which stories were built this round", not
 the 31 ACs, so US-2 AC4 ("with 0 items, 摂取 [intake] shows 0, not blank") was dropped
 entirely, and the user hit it on a real device.
 
-## Three parsing conventions (changing a convention = change it here + sync `ac-case-matrix.md` §三)
+## Three parsing conventions (changing a convention = change it here + sync `references/method.md` §Step 4)
 
 1. **AC definition**: the `**AC<m> ...**` lines under a `### US-<n> ...` **or**
    `### Story <n> ...` heading in the spec file. Both heading styles parse to the
@@ -44,7 +44,7 @@ batch of already-trimmed cases (= the chosen combinations of axis values), which
 **2-way pairs** do they miss (a minimal implementation of NIST combinatorial coverage
 measurement; it generates no new cases, it only measures what the chosen ones miss).
 
-For the format and parsing conventions see `ac-case-matrix.md` §三; not repeated here.
+For the format and parsing conventions see `references/method.md` §Step 4; not repeated here.
 Exit code = number of uncovered pairs (+ number of dangling tokens), the same semantics
 as the AC gate above (capped at 255, 0 = pass).
 
@@ -241,7 +241,7 @@ def report(res: dict) -> None:
 
 
 # ── --pairs: 2-way pair coverage measurement (NIST combinatorial coverage measurement) ────
-# Format: see ac-case-matrix.md §三. Three syntax elements:
+# Format: see references/method.md §Step 4. Three syntax elements:
 #   1. Axis definition:  <!-- pairs-axis: <axis name> = <value 1>, <value 2>, ... -->
 #   2. Selected cell:    anywhere in a table row (starting with `|`), write `pairs: <axis name>=<value>, <axis name>=<value>`
 #   3. Waived cell:      <!-- pairs-waive: <axis name>=<value>, <axis name>=<value> — <reason, required> -->

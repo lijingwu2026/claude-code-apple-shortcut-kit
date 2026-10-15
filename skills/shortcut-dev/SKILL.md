@@ -139,7 +139,8 @@ The protocol does not cover "when a new story is added, how should the cases be 
 
 | The one question it answers | Which to read |
 |---|---|
-| Which cases one AC should split into — extracting axes, designing the technique classification, which cells must be run by the user | `${CLAUDE_PLUGIN_ROOT}/skills/shortcut-qa/SKILL.md` §1 → §2 |
+| What a PRD must contain (`### US-<n>` stories, `**AC<m>` criteria) before cases are derived | the `shortcut-spec` skill |
+| Which cases one AC should split into — extracting axes, designing the technique classification, which cells must be run by the user | the `shortcut-qa` skill; its method is `${CLAUDE_PLUGIN_ROOT}/skills/shortcut-qa/references/method.md` Step 2 |
 | Does the matrix match the ACs (this is a gate; the criterion is the exit code) | `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/ac_coverage.py" --help` |
 
 🚩 Red flag: treating the reconciliation gate's printed `uncovered 0` as verified. **This gate has several documented false-green forms, and each product's `ac-matrix.md` header discipline section records only some of them** — before running it, open the file of **the product you are changing**; do not count on another product's file being complete. The correct way to capture the exit code is in that section too (a pipe swallows it).

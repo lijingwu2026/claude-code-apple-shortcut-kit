@@ -211,7 +211,7 @@ Corrected from project evidence.
 
 ## 4. Test / verification playbook
 
-> **This section covers method; each product's physical landing point is on the product's own side.** Acceptance matrix = that product's `specs/ac-matrix.md` (it marks which cells static checks can't reach, which must be run by the user on a real device, and the several false-green forms of the reconciliation gate); semantic invariants and destroy test = the script in that product's `scripts/` whose name contains `regression`. **"Which cases one AC should split into" is not this protocol's business** — that layer is in `${CLAUDE_PLUGIN_ROOT}/skills/shortcut-qa/SKILL.md` (axis extraction and human/machine triage) and in a separate technique library for building cases.
+> **This section covers method; each product's physical landing point is on the product's own side.** Acceptance matrix = that product's `specs/ac-matrix.md` (it marks which cells static checks can't reach, which must be run by the user on a real device, and the several false-green forms of the reconciliation gate); semantic invariants and destroy test = the script in that product's `scripts/` whose name contains `regression`. **"Which cases one AC should split into" is not this protocol's business** — that layer is in the `shortcut-qa` skill (axis extraction, human/machine triage, technique menu; its method is `${CLAUDE_PLUGIN_ROOT}/skills/shortcut-qa/references/method.md`).
 
 ### 4.1 Core standard
 
